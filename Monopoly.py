@@ -54,6 +54,16 @@ class Player:
 
         else:
             pass
+
+    def pay(self, field):
+        player2 = (p2, p1)[self.turn]
+        town = self.find_city(field, self.turn)
+        if town is not None and town.isMortgaged is False and town.isBought and town not in self.town_list:
+            self.balance -= town.rent
+            player2.balance += town.rent
+            print(f'Гравець {self.name} став на локацію {town.name}. Тому повинен заплатити гравцеві {player2.name} - '
+                  f'{town.rent} грн')
+
 class RealEstate:
     def __init__(self, title, name, cost, rent, build_cost):
         self.title = title
@@ -68,7 +78,9 @@ class RealEstate:
 
 class Field:
     def __init__(self):
-        self.field = ['STR', 'POL', 'LUC', '*?*', 'KYV', 'VIN', '*#*', 'RIV', 'TER', '*$*']
+        self.field = ('STR', vinnyca.title, lutsk.title, '*?*', rivne.title, ternopil.title, '*#*', kyiv.title,
+                      lviv.title,
+                      '*$*')
         self.a_player = ['*A*', '''   ''', '''   ''', '''   ''', '''   ''', '''   ''', '''   ''', '''   ''', '''   ''',
                          '''   ''']
         self.b_player = ['*B*', '''   ''', '''   ''', '''   ''', '''   ''', '''   ''', '''   ''', '''   ''', '''   ''',
@@ -97,8 +109,10 @@ while True:
         if turn == 0:
             p1.move(field)
             p1.buy(field)
+            p1.pay(field)
             turn += 1
         else:
             p2.move(field)
             p2.buy(field)
+            p2.pay(field)
             turn -= 1
