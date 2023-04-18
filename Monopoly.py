@@ -29,6 +29,18 @@ class Player:
         print(*field.building)
 
 
+class RealEstate:
+    def __init__(self, title, name, cost, rent, build_cost):
+        self.title = title
+        self.name = name
+        self.cost = cost
+        self.rent = rent
+        self.build_cost = build_cost
+        self.num_of_building = 0
+        self.isBought = False
+        self.isMortgaged = False
+
+
 class Field:
     def __init__(self):
         self.field = ['STR', 'POL', 'LUC', '*?*', 'KYV', 'VIN', '*#*', 'RIV', 'TER', '*$*']
