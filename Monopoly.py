@@ -85,6 +85,12 @@ class Player:
                               f'\t-Досягнуто ліміт кількості будинків\n'
                               f'\t-Територія закладена\n')
 
+    def show_town_list(self):
+        town_str = ''
+        for town in self.town_list:
+            town_str += f'\t{town.name}\n'
+        return town_str
+
 
 class RealEstate:
     def __init__(self, title, name, cost, rent, build_cost):
@@ -140,3 +146,9 @@ while True:
             p2.buy(field)
             p2.pay(field)
             turn -= 1
+
+    elif choose == '1':
+        if turn == 0:
+            print(f'У гравця {p1.name} у власності такі будівлі:\n{p1.show_town_list()}')
+        else:
+            print(f'У гравця {p2.name} у власності такі будівлі:\n{p2.show_town_list()}')
