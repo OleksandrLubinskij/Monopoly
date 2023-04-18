@@ -64,6 +64,28 @@ class Player:
             print(f'Гравець {self.name} став на локацію {town.name}. Тому повинен заплатити гравцеві {player2.name} - '
                   f'{town.rent} грн')
 
+    def build(self, field):
+        if self.town_list:
+            build = input('Ви хочете збудувати будинок на одній з своїх територій?\n1 - Так\t\t2 - Ні\n')
+            if build == '1':
+                for i, x in enumerate(self.town_list):
+                    print(f'{i}.{x.name} - {x.build_cost}')
+                town_index = int(input('Введіть номер міста у якому хочете збудувати будинок: '))
+                if 0 <= town_index <= len(self.town_list):
+                    town = self.town_list[town_index]
+                    if self.balance >= town.build_cost and town.num_of_building <= 4 and town.isMortgaged is False:
+                        self.balance -= town.build_cost
+                        town.rent += 15
+                        town.num_of_building += 1
+                        town_field_index = field.field.index(town.title)
+                        field.building[town_field_index] = f'({town.num_of_building})'
+                    else:
+                        print(f'\nВи не можете збудувати будинок у місті {town.name}!\nМожливі причини\n'
+                              f'\t-Недостатньо коштів\n'
+                              f'\t-Досягнуто ліміт кількості будинків\n'
+                              f'\t-Територія закладена\n')
+
+
 class RealEstate:
     def __init__(self, title, name, cost, rent, build_cost):
         self.title = title
@@ -107,11 +129,13 @@ while True:
     choose = input(f"\nНатисніть Enter, щоб зробити хід\n")
     if choose == '':
         if turn == 0:
+            p1.build(field)
             p1.move(field)
             p1.buy(field)
             p1.pay(field)
             turn += 1
         else:
+            p2.build(field)
             p2.move(field)
             p2.buy(field)
             p2.pay(field)
