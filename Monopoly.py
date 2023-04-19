@@ -7,13 +7,15 @@ class Player:
         self.turn = turn
         self.town_list = []
         self.balance = 500
-
+        self.chanse_card = ['Ви знайшли на землі 30 грн', 'Заплатіть за візит до лікаря 50 грн', "Ви виграли 100 грн на конкурсі "
+                           "'Найкраща гра Монополія написана на Python'", 'Вас обікрали на 70 грн']
     def move(self, field):
         player_board = field.a_player if self.turn == 0 else field.b_player
         opponent_board = field.b_player if self.turn == 0 else field.a_player
         icon = '*A*' if self.turn == 0 else '*B*'
 
         step = random.randint(1, 4)
+
         p_pos = player_board.index(icon)
         obj = player_board.pop(p_pos)
         actual_pos = p_pos + step
@@ -119,38 +121,56 @@ class Player:
                 town.isMortgaged = False
 
     def casino(self, field):
-            player_board = field.a_player if turn == 0 else field.b_player
-            icon = '*A*' if turn == 0 else '*B*'
-            p_pos = player_board.index(icon)
-            if p_pos == 9:
-                choose = input('\nВи прийшли на локацію Казино!\nБажаєте зіграти?\n1 - Так\t\t2 - Ні\n')
-                if choose == '1':
-                    print('''Виграшні комбінації\n'$'- 3:x10\t2:x9\n'%'- 3:x8\t2:x7\n'@'- 3:x6\t2:x5\n'*'- 3:x4\t2:x3''')
-                    print(f'Ваш баланс - {self.balance}')
-                    money = int(input('Введіть ставку:'))
-                    if money < self.balance:
-                        symbols = ['*', '@', '%', '$']
+        player_board = field.a_player if turn == 0 else field.b_player
+        icon = '*A*' if turn == 0 else '*B*'
+        p_pos = player_board.index(icon)
+        if p_pos == 9:
+            choose = input('\nВи прийшли на локацію Казино!\nБажаєте зіграти?\n1 - Так\t\t2 - Ні\n')
+            if choose == '1':
+                print('''Виграшні комбінації\n'$'- 3:x10\t2:x9\n'%'- 3:x8\t2:x7\n'@'- 3:x6\t2:x5\n'*'- 3:x4\t2:x3''')
+                print(f'Ваш баланс - {self.balance}')
+                money = int(input('Введіть ставку:'))
+                if money < self.balance:
+                    symbols = ['*', '@', '%', '$']
 
-                        win_combinations = {
-                            '$': {3: 10, 2: 6},
-                            '%': {3: 9, 2: 5},
-                            '@': {3: 8, 2: 4},
-                            '*': {3: 7, 2: 3}}
-                        combination = [random.choice(symbols) for i in range(3)]
-                        symbol_counts = {symbol: combination.count(symbol) for symbol in symbols}
-                        print(f'Ваша комбінація - {symbol_counts}')
-                        self.balance -= money
-                        for symbol, counts in symbol_counts.items():
-                            if counts in win_combinations[symbol]:
-                                win = win_combinations[symbol][counts] * money
-                                print(f'\nВи виграли - {win} грн!\n')
-                                self.balance += win
-                                return self.balance
+                    win_combinations = {
+                        '$': {3: 10, 2: 6},
+                        '%': {3: 9, 2: 5},
+                        '@': {3: 8, 2: 4},
+                        '*': {3: 7, 2: 3}}
+                    combination = [random.choice(symbols) for i in range(3)]
+                    symbol_counts = {symbol: combination.count(symbol) for symbol in symbols}
+                    print(f'Ваша комбінація - {symbol_counts}')
+                    self.balance -= money
+                    for symbol, counts in symbol_counts.items():
+                        if counts in win_combinations[symbol]:
+                            win = win_combinations[symbol][counts] * money
+                            print(f'\nВи виграли - {win} грн!\n')
+                            self.balance += win
+                            return self.balance
 
-                        else:
-                            print('\nВи програли\n')
                     else:
-                        print('\nНедостатньо коштів\n')
+                        print('\nВи програли\n')
+                else:
+                    print('\nНедостатньо коштів\n')
+
+    def chance(self, field):
+        player_board = field.a_player if turn == 0 else field.b_player
+        icon = '*A*' if turn == 0 else '*B*'
+        p_pos = player_board.index(icon)
+        if p_pos == 3:
+            print("\nВи стали на позицію 'Шанс'")
+            probability = [0.2, 0.4, 0.1, 0.3]
+            result = random.choices(self.chanse_card, probability, k=1)
+            print(f'{result[0]}\n')
+            if self.chanse_card.index(result[0]) == 0:
+                self.balance += 30
+            elif self.chanse_card.index(result[0]) == 1:
+                self.balance -= 50
+            elif self.chanse_card.index(result[0]) == 2:
+                self.balance += 100
+            elif self.chanse_card.index(result[0]) == 3:
+                self.balance -= 70
 
 
 class RealEstate:
@@ -199,6 +219,7 @@ while True:
         if turn == 0:
             p1.build(field)
             p1.move(field)
+            p1.chance(field)
             p1.casino(field)
             p1.buy(field)
             p1.pay(field)
@@ -206,6 +227,7 @@ while True:
         else:
             p2.build(field)
             p2.move(field)
+            p2.chance(field)
             p2.casino(field)
             p2.buy(field)
             p2.pay(field)
