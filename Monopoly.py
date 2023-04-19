@@ -7,28 +7,43 @@ class Player:
         self.turn = turn
         self.town_list = []
         self.balance = 500
-        self.chanse_card = ['Ви знайшли на землі 30 грн', 'Заплатіть за візит до лікаря 50 грн', "Ви виграли 100 грн на конкурсі "
-                           "'Найкраща гра Монополія написана на Python'", 'Вас обікрали на 70 грн']
+        self.chanse_card = ['Ви знайшли на землі 30 грн', 'Заплатіть за візит до лікаря 50 грн',
+                            "Ви виграли 100 грн на конкурсі "
+                            "'Найкраща гра Монополія написана на Python'", 'Вас обікрали на 70 грн']
+        self.is_prisoner = False
+        self.time_in_prison = 0
+
     def move(self, field):
-        player_board = field.a_player if self.turn == 0 else field.b_player
-        opponent_board = field.b_player if self.turn == 0 else field.a_player
-        icon = '*A*' if self.turn == 0 else '*B*'
+        if self.is_prisoner:
+            self.time_in_prison += 1
+            if self.time_in_prison == 2:
+                print("Ви вийшли із в'язниці!")
+                self.is_prisoner = False
+                self.time_in_prison = 0
+        else:
+            player_board = field.a_player if self.turn == 0 else field.b_player
+            opponent_board = field.b_player if self.turn == 0 else field.a_player
+            icon = '*A*' if self.turn == 0 else '*B*'
 
-        step = random.randint(1, 4)
+            step = random.randint(1, 4)
 
-        p_pos = player_board.index(icon)
-        obj = player_board.pop(p_pos)
-        actual_pos = p_pos + step
-        if actual_pos >= 10:
-            self.balance += 50
-            actual_pos -= 10
-        player_board.insert(actual_pos, obj)
+            p_pos = player_board.index(icon)
+            obj = player_board.pop(p_pos)
+            actual_pos = p_pos + step
+            if actual_pos >= 10:
+                self.balance += 50
+                actual_pos -= 10
+            player_board.insert(actual_pos, obj)
 
-        print(f'{self.name} пересунувся на {step} кроки')
-        print(*player_board)
-        print(*opponent_board)
-        print(*field.field)
-        print(*field.building)
+            print(f'{self.name} пересунувся на {step} кроки')
+            print(*player_board)
+            print(*opponent_board)
+            print(*field.field)
+            print(*field.building)
+
+            if actual_pos == 6:
+                print(f'{self.name} потрапив в тюрму!')
+                self.is_prisoner = True
 
     @staticmethod
     def find_city(field, turn):
@@ -47,7 +62,7 @@ class Player:
 
     def buy(self, field):
         town = self.find_city(field, self.turn)
-        if town is not None and town.isBought is False and town not in self.town_list:
+        if town is not None and town.isBought is False and town not in self.town_list and self.is_prisoner is False:
             buy_it = input(f'Ви бажаєте купити місто {town.name} за {town.cost}\n1 - Так\t\t2 - Ні\n')
             if buy_it == '1':
                 self.balance -= town.cost
@@ -67,7 +82,7 @@ class Player:
                   f'{town.rent} грн')
 
     def build(self, field):
-        if self.town_list:
+        if self.town_list and self.is_prisoner is False:
             build = input('Ви хочете збудувати будинок на одній з своїх територій?\n1 - Так\t\t2 - Ні\n')
             if build == '1':
                 for i, x in enumerate(self.town_list):
@@ -224,7 +239,8 @@ while True:
             p1.buy(field)
             p1.pay(field)
             turn += 1
-        else:
+
+        elif turn == 1:
             p2.build(field)
             p2.move(field)
             p2.chance(field)
