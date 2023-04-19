@@ -118,6 +118,40 @@ class Player:
                 field.building[town_field_index] = f'({town.num_of_building})'
                 town.isMortgaged = False
 
+    def casino(self, field):
+            player_board = field.a_player if turn == 0 else field.b_player
+            icon = '*A*' if turn == 0 else '*B*'
+            p_pos = player_board.index(icon)
+            if p_pos == 9:
+                choose = input('\nВи прийшли на локацію Казино!\nБажаєте зіграти?\n1 - Так\t\t2 - Ні\n')
+                if choose == '1':
+                    print('''Виграшні комбінації\n'$'- 3:x10\t2:x9\n'%'- 3:x8\t2:x7\n'@'- 3:x6\t2:x5\n'*'- 3:x4\t2:x3''')
+                    print(f'Ваш баланс - {self.balance}')
+                    money = int(input('Введіть ставку:'))
+                    if money < self.balance:
+                        symbols = ['*', '@', '%', '$']
+
+                        win_combinations = {
+                            '$': {3: 10, 2: 6},
+                            '%': {3: 9, 2: 5},
+                            '@': {3: 8, 2: 4},
+                            '*': {3: 7, 2: 3}}
+                        combination = [random.choice(symbols) for i in range(3)]
+                        symbol_counts = {symbol: combination.count(symbol) for symbol in symbols}
+                        print(f'Ваша комбінація - {symbol_counts}')
+                        self.balance -= money
+                        for symbol, counts in symbol_counts.items():
+                            if counts in win_combinations[symbol]:
+                                win = win_combinations[symbol][counts] * money
+                                print(f'\nВи виграли - {win} грн!\n')
+                                self.balance += win
+                                return self.balance
+
+                        else:
+                            print('\nВи програли\n')
+                    else:
+                        print('\nНедостатньо коштів\n')
+
 
 class RealEstate:
     def __init__(self, title, name, cost, rent, build_cost):
@@ -159,17 +193,20 @@ towns = (vinnyca, lutsk, rivne, ternopil, kyiv, lviv)
 field = Field()
 while True:
     print(f'{p1.name} має на рахунку - {p1.balance}\n{p2.name} має на рахунку - {p2.balance}')
-    choose = input(f"\nНатисніть Enter, щоб зробити хід\n")
+    choose = input(f"\nНатисніть Enter, щоб зробити хід\nНатисніть 1, щоб переглянути об'єкти у власності\n"
+                   f"Натисніть 2, щоб закласти місто\nНатисніть 3, щоб вивести із застави місто:\n")
     if choose == '':
         if turn == 0:
             p1.build(field)
             p1.move(field)
+            p1.casino(field)
             p1.buy(field)
             p1.pay(field)
             turn += 1
         else:
             p2.build(field)
             p2.move(field)
+            p2.casino(field)
             p2.buy(field)
             p2.pay(field)
             turn -= 1
