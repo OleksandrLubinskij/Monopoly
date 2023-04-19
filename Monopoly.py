@@ -91,6 +91,33 @@ class Player:
             town_str += f'\t{town.name}\n'
         return town_str
 
+    def mortgage(self):
+        if self.town_list:
+            for i, x in enumerate(self.town_list):
+                print(f'{i}.{x.name} - {x.cost - 30}')
+            town_index = int(input('Введіть номер міста яке хочете закласти: '))
+            if 0 <= town_index <= len(self.town_list):
+                town = self.town_list[town_index]
+                self.balance += town.cost - 30
+                print(f'Ви заклали місто {town.name} і получили за це {town.cost - 30}')
+                town_field_index = field.field.index(town.title)
+                field.building[town_field_index] = f'(#)'
+                town.isMortgaged = True
+
+    def unMortgage(self):
+        if self.town_list:
+            for i, x in enumerate(self.town_list):
+                print(f'{i}.{x.name} - {(x.cost - 30) + (x.cost - 30) * 0.1}')
+            town_index = int(input('Введіть номер міста яке хочете вивести із застави: '))
+            if 0 <= town_index <= len(self.town_list):
+                town = self.town_list[town_index]
+                cost = (town.cost - 30) + (town.cost - 30) * 0.1
+                self.balance -= cost
+                print(f'Ви вивели місто {town.name} із застави і витратили {cost} грн')
+                town_field_index = field.field.index(town.title)
+                field.building[town_field_index] = f'({town.num_of_building})'
+                town.isMortgaged = False
+
 
 class RealEstate:
     def __init__(self, title, name, cost, rent, build_cost):
@@ -152,3 +179,15 @@ while True:
             print(f'У гравця {p1.name} у власності такі будівлі:\n{p1.show_town_list()}')
         else:
             print(f'У гравця {p2.name} у власності такі будівлі:\n{p2.show_town_list()}')
+
+    elif choose == '2':
+        if turn == 0:
+            p1.mortgage()
+        else:
+            p2.mortgage()
+
+    elif choose == '3':
+        if turn == 0:
+            p1.unMortgage()
+        else:
+            p2.unMortgage()
