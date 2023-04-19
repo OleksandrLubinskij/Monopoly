@@ -6,12 +6,14 @@ class Player:
         self.name = name
         self.turn = turn
         self.town_list = []
-        self.balance = 500
+        self.balance = 200
         self.chanse_card = ['Ви знайшли на землі 30 грн', 'Заплатіть за візит до лікаря 50 грн',
                             "Ви виграли 100 грн на конкурсі "
                             "'Найкраща гра Монополія написана на Python'", 'Вас обікрали на 70 грн']
         self.is_prisoner = False
         self.time_in_prison = 0
+        self.mortgage_town = []
+        self.game_over = False
 
     def move(self, field):
         if self.is_prisoner:
@@ -24,9 +26,7 @@ class Player:
             player_board = field.a_player if self.turn == 0 else field.b_player
             opponent_board = field.b_player if self.turn == 0 else field.a_player
             icon = '*A*' if self.turn == 0 else '*B*'
-
             step = random.randint(1, 4)
-
             p_pos = player_board.index(icon)
             obj = player_board.pop(p_pos)
             actual_pos = p_pos + step
@@ -34,22 +34,20 @@ class Player:
                 self.balance += 50
                 actual_pos -= 10
             player_board.insert(actual_pos, obj)
-
             print(f'{self.name} пересунувся на {step} кроки')
             print(*player_board)
             print(*opponent_board)
             print(*field.field)
             print(*field.building)
-
             if actual_pos == 6:
                 print(f'{self.name} потрапив в тюрму!')
                 self.is_prisoner = True
+
 
     @staticmethod
     def find_city(field, turn):
         player_board = field.a_player if turn == 0 else field.b_player
         icon = '*A*' if turn == 0 else '*B*'
-
         p_pos = player_board.index(icon)
         title = field.field[p_pos]
         event_places = ['STR', '*?*', '*#*', '*$*']
@@ -68,7 +66,6 @@ class Player:
                 self.balance -= town.cost
                 town.isBought = True
                 self.town_list.append(town)
-
         else:
             pass
 
@@ -110,29 +107,37 @@ class Player:
 
     def mortgage(self):
         if self.town_list:
-            for i, x in enumerate(self.town_list):
-                print(f'{i}.{x.name} - {x.cost - 30}')
-            town_index = int(input('Введіть номер міста яке хочете закласти: '))
-            if 0 <= town_index <= len(self.town_list):
-                town = self.town_list[town_index]
-                self.balance += town.cost - 30
-                print(f'Ви заклали місто {town.name} і получили за це {town.cost - 30}')
-                town_field_index = field.field.index(town.title)
-                field.building[town_field_index] = f'(#)'
-                town.isMortgaged = True
+            choose = input('Ви хочете щось закласти?\n1 - Так\t\t2 - Ні')
+            if choose == '1':
+                for i, x in enumerate(self.town_list):
+                    print(f'{i}.{x.name} - {x.cost - 30}')
+                town_index = int(input('Введіть номер міста яке хочете закласти: '))
+                if 0 <= town_index <= len(self.town_list):
+                    town = self.town_list[town_index]
+                    self.balance += town.cost - 30
+                    print(f'Ви заклали місто {town.name} і получили за це {town.cost - 30}')
+                    town_field_index = field.field.index(town.title)
+                    field.building[town_field_index] = f'(#)'
+                    self.town_list.remove(town)
+                    self.mortgage_town.append(town)
+                    town.isMortgaged = True
+            else:
+                return True
 
     def unMortgage(self):
-        if self.town_list:
-            for i, x in enumerate(self.town_list):
+        if self.mortgage_town:
+            for i, x in enumerate(self.mortgage_town):
                 print(f'{i}.{x.name} - {(x.cost - 30) + (x.cost - 30) * 0.1}')
             town_index = int(input('Введіть номер міста яке хочете вивести із застави: '))
-            if 0 <= town_index <= len(self.town_list):
-                town = self.town_list[town_index]
+            if 0 <= town_index <= len(self.mortgage_town):
+                town = self.mortgage_town[town_index]
                 cost = (town.cost - 30) + (town.cost - 30) * 0.1
                 self.balance -= cost
                 print(f'Ви вивели місто {town.name} із застави і витратили {cost} грн')
                 town_field_index = field.field.index(town.title)
                 field.building[town_field_index] = f'({town.num_of_building})'
+                self.town_list.append(town)
+                self.mortgage_town.remove(town)
                 town.isMortgaged = False
 
     def casino(self, field):
@@ -147,7 +152,6 @@ class Player:
                 money = int(input('Введіть ставку:'))
                 if money < self.balance:
                     symbols = ['*', '@', '%', '$']
-
                     win_combinations = {
                         '$': {3: 10, 2: 6},
                         '%': {3: 9, 2: 5},
@@ -163,7 +167,6 @@ class Player:
                             print(f'\nВи виграли - {win} грн!\n')
                             self.balance += win
                             return self.balance
-
                     else:
                         print('\nВи програли\n')
                 else:
@@ -186,6 +189,14 @@ class Player:
                 self.balance += 100
             elif self.chanse_card.index(result[0]) == 3:
                 self.balance -= 70
+
+    def win(self):
+        player2 = (p2, p1)[self.turn]
+        if self.balance < 0 and not self.town_list:
+            print(f'Гравець {player2.name} виграв!\nГравець {self.name} програв')
+            return True
+        else:
+            return False
 
 
 class RealEstate:
@@ -214,7 +225,6 @@ class Field:
 
 p1 = Player('Sasha', 0)
 p2 = Player('Oleg', 1)
-
 turn = random.randint(0, 1)
 vinnyca = RealEstate('VIN', 'Вінниця', 100, 10, 50)
 lutsk = RealEstate('LUC', 'Луцьк', 110, 15, 55)
@@ -222,16 +232,18 @@ rivne = RealEstate('RIV', 'Рівне', 120, 20, 60)
 ternopil = RealEstate('TER', 'Тернопіль', 130, 25, 65)
 kyiv = RealEstate('KYV', 'Київ', 140, 30, 70)
 lviv = RealEstate('LVI', 'Львів', 150, 35, 75)
-
 towns = (vinnyca, lutsk, rivne, ternopil, kyiv, lviv)
-
 field = Field()
 while True:
+
     print(f'{p1.name} має на рахунку - {p1.balance}\n{p2.name} має на рахунку - {p2.balance}')
     choose = input(f"\nНатисніть Enter, щоб зробити хід\nНатисніть 1, щоб переглянути об'єкти у власності\n"
                    f"Натисніть 2, щоб закласти місто\nНатисніть 3, щоб вивести із застави місто:\n")
     if choose == '':
         if turn == 0:
+            if p1.win():
+                break
+
             p1.build(field)
             p1.move(field)
             p1.chance(field)
@@ -239,8 +251,10 @@ while True:
             p1.buy(field)
             p1.pay(field)
             turn += 1
-
         elif turn == 1:
+            if p2.win():
+                break
+
             p2.build(field)
             p2.move(field)
             p2.chance(field)
@@ -248,21 +262,20 @@ while True:
             p2.buy(field)
             p2.pay(field)
             turn -= 1
-
     elif choose == '1':
         if turn == 0:
             print(f'У гравця {p1.name} у власності такі будівлі:\n{p1.show_town_list()}')
         else:
             print(f'У гравця {p2.name} у власності такі будівлі:\n{p2.show_town_list()}')
-
     elif choose == '2':
         if turn == 0:
             p1.mortgage()
         else:
             p2.mortgage()
-
     elif choose == '3':
         if turn == 0:
             p1.unMortgage()
         else:
             p2.unMortgage()
+
+
